@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Carbon-Aware ML Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eaf0ee;--panel:#f7faf9;--ink:#12261f;--mute:#56685f;--line:#c9d6d1;--ok:#1d7a4c;--warn:#b7791f;--bad:#c8412a;--c1:#d1572a;--c2:#1f6f5c;--c3:#3b6fd1;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1c18;--panel:#162722;--ink:#e6f0ec;--mute:#93a79f;--line:#2a403a;--ok:#4fcb8a;--warn:#e5b25a;--bad:#ff7a5f;--c1:#ff8a5c;--c2:#52c9a6;--c3:#7aa2ff}}
+:root[data-theme="dark"]{--bg:#0f1c18;--panel:#162722;--ink:#e6f0ec;--mute:#93a79f;--line:#2a403a;--ok:#4fcb8a;--warn:#e5b25a;--bad:#ff7a5f;--c1:#ff8a5c;--c2:#52c9a6;--c3:#7aa2ff}
+*,*:before,*:after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+.wrap{max-width:1120px;margin:0 auto;padding:22px 18px 56px}
+.top{display:flex;justify-content:space-between;align-items:center;color:var(--mute)}
+h1{font-size:clamp(2rem,5.5vw,3.5rem);line-height:1.03;letter-spacing:-.03em;font-weight:800;margin:12px 0 8px;max-width:18ch}
+h2{font-size:1.1rem;margin:0 0 10px;font-weight:600}
+.lede{color:var(--mute);max-width:62ch;margin:0 0 22px}
+.grid{display:grid;grid-template-columns:minmax(0,310px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.stack>*+*{margin-top:16px}
+label{display:block;font-size:.8rem;color:var(--mute);margin:11px 0 3px}
+input,select{width:100%;font:inherit;font-size:.92rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);margin:20px 0 0;font-weight:600}
+h3:first-child{margin-top:0}
+button{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 14px;cursor:pointer}
+button.p{background:var(--ok);color:#fff;border-color:var(--ok);font-weight:600}
+button:disabled{opacity:.45;cursor:not-allowed}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.chk{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:.88rem}.chk input{width:auto}
+.meter{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:space-between}
+.big{font-size:clamp(2.6rem,8vw,4.4rem);font-weight:800;letter-spacing:-.04em;line-height:1;transition:color .3s}
+.unit{font-size:.95rem;color:var(--mute);font-weight:400;letter-spacing:0;margin-left:6px}
+.kv{display:flex;gap:22px;flex-wrap:wrap}.kv div{border-left:3px solid var(--ok);padding-left:9px}.kv b{display:block;font-size:1.15rem}.kv span{font-size:.78rem;color:var(--mute)}
+.bud{height:14px;background:var(--bg);border-radius:7px;overflow:hidden;margin-top:14px;border:1px solid var(--line)}
+.bud i{display:block;height:100%;width:0;background:var(--ok);transition:width .15s,background .3s}
+.sub{color:var(--mute);font-size:.85rem;margin:7px 0 0}
+.vis{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:14px}
+@media (max-width:620px){.vis{grid-template-columns:minmax(0,1fr)}}
+canvas{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.al{list-style:none;margin:0;padding:0;max-height:240px;overflow:auto}
+.al li{padding:8px 10px;border-radius:8px;margin-bottom:6px;font-size:.9rem;border-left:4px solid var(--ok);background:var(--bg)}
+.al li.warn{border-color:var(--warn)}.al li.bad{border-color:var(--bad);font-weight:600}.al li.info{border-color:var(--c3)}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.85rem;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}th:first-child,td:first-child{text-align:left}
+th{color:var(--mute);font-weight:600}tr.best td{color:var(--ok);font-weight:600}
+ul.f{margin:0;padding-left:20px}ul.f li{margin:7px 0;max-width:72ch}
+.tag{font-size:.72rem;padding:2px 8px;border-radius:99px;background:var(--c3);color:#fff;margin-left:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><span>Carbon-Aware ML Trainer</span><button id="theme" type="button">Toggle theme</button></div>
+  <h1>Train a model. Watch the carbon. Get alerted.</h1>
+  <p class="lede">A neural network trains live in your browser. Every epoch the page converts compute time into energy and CO₂e, checks it against your carbon budget, and raises alerts. Then Claude reviews the runs and tells you what to change.</p>
+
+  <div class="grid">
+    <aside class="panel">
+      <h3>Data &amp; model</h3>
+      <label for="ds">Dataset (600 points, 80/20 split)</label>
+      <select id="ds"><option value="spiral">Spiral (3 classes)</option><option value="moons">Moons</option><option value="circles">Circles</option><option value="xor">XOR</option></select>
+      <div class="row"><div><label for="hid">Neurons / layer</label><input id="hid" type="number" min="2" max="128" value="32"></div><div><label for="lay">Hidden layers</label><input id="lay" type="number" min="1" max="4" value="2"></div></div>
+      <label for="act">Activation</label><select id="act"><option value="tanh">tanh</option><option value="relu">ReLU</option></select>
+      <div class="row"><div><label for="ep">Epochs</label><input id="ep" type="number" min="5" max="1000" value="200"></div><div><label for="lr">Learning rate</label><input id="lr" type="number" step="0.01" min="0.001" value="0.1"></div></div>
+      <label for="bs">Batch size</label><input id="bs" type="number" min="1" value="16">
+      <h3>Hardware &amp; grid (assumed)</h3>
+      <label for="dev">Pretend it runs on</label>
+      <select id="dev"><option value="30">Laptop CPU, 30 W</option><option value="90" selected>Desktop CPU, 90 W</option><option value="250">Single GPU, 250 W</option><option value="3200">8× A100 node, 3,200 W</option><option value="custom">My own PC / laptop</option></select>
+      <div id="mydev" hidden style="margin-top:10px;padding:12px;border:1px dashed var(--line);border-radius:10px">
+        <p class="sub" id="det" style="margin:0 0 6px"></p>
+        <label for="cpuw">CPU class</label>
+        <select id="cpuw"><option value="15">Ultrabook (U-series), 15 W</option><option value="20">Apple M-series, ~20 W</option><option value="28">Thin laptop (P-series), 28 W</option><option value="40">Apple M Pro/Max, ~40 W</option><option value="45" selected>Performance laptop (H-series), 45 W</option><option value="55">Gaming laptop (HX), 55 W</option><option value="65">Desktop, 65 W</option><option value="95">Desktop, 95 W</option><option value="125">Desktop (K / high-end), 125 W</option></select>
+        <label for="gpuw">GPU</label>
+        <select id="gpuw"><option value="0" selected>None / integrated</option><option value="60">Laptop GPU, 60 W</option><option value="100">Laptop GPU, 100 W</option><option value="170">Desktop GPU, 170 W</option><option value="250">Desktop GPU, 250 W</option><option value="450">Desktop GPU, 450 W</option></select>
+        <div class="row"><div><label for="cpul">CPU load %</label><input id="cpul" type="number" min="1" max="100" value="50"></div><div><label for="gpul">GPU load %</label><input id="gpul" type="number" min="0" max="100" value="0"></div></div>
+        <div class="row"><div><label for="ram">RAM (GB)</label><input id="ram" type="number" min="1" value="16"></div><div><label for="oth">Screen/board (W)</label><input id="oth" type="number" min="0" value="8"></div></div>
+        <label for="chg">Charger efficiency %</label><input id="chg" type="number" min="50" max="100" value="85">
+        <p class="sub">Estimated draw: <b id="mw">0 W</b>. Training here runs on the CPU, so GPU load stays 0 unless you want to test a GPU assumption.</p>
+        <div class="btns" style="margin-top:8px"><button type="button" id="msave">Save my device</button></div>
+      </div>
+      <div class="row"><div><label for="pue">PUE</label><input id="pue" type="number" step="0.01" min="1" value="1.1"></div><div><label for="ci">Grid g/kWh</label><input id="ci" type="number" min="0" value="700"></div></div>
+      <label for="reg">Region</label><select id="reg"></select>
+      <h3>Alerts</h3>
+      <label for="budget">Carbon budget (mgCO₂e)</label><input id="budget" type="number" min="1" value="40">
+      <div class="row"><div><label for="warn">Warn at %</label><input id="warn" type="number" min="10" max="99" value="80"></div><div><label for="pat">Plateau patience (epochs)</label><input id="pat" type="number" min="5" value="30"></div></div>
+      <div class="chk"><input id="auto" type="checkbox" checked><label for="auto" style="margin:0;color:var(--ink)">Auto-stop on budget exceeded or plateau</label></div>
+      <div class="chk"><input id="snd" type="checkbox" checked><label for="snd" style="margin:0;color:var(--ink)">Beep on critical alert</label></div>
+      <div class="btns"><button class="p" id="train" type="button">Train</button><button id="sweep" type="button">Grid search (8 trials)</button><button id="stop" type="button" disabled>Stop</button><button id="reset" type="button">Reset</button></div>
+      <p class="sub">Browsers can't read power sensors, so energy = measured compute time × the watts above × PUE. Try the 8× A100 node to trigger a critical alert.</p>
+    </aside>
+
+    <main class="stack">
+      <section class="panel" id="fc"><h2>Forecast before you train <span id="fb" class="tag">...</span></h2><div class="kv"><div><b id="f1">-</b><span>predicted mgCO₂e (likely range)</span></div><div><b id="f2">-</b><span>predicted run time</span></div><div><b id="f3">-</b><span>if you run the 8-trial grid search</span></div></div><p class="sub" id="ft">Calibrating on this device…</p></section>
+
+      <section class="panel" aria-live="polite">
+        <div class="meter">
+          <div><div class="big" id="mg">0.0<span class="unit">mgCO₂e this job</span></div></div>
+          <div class="kv"><div><b id="kwh">0</b><span>Wh used</span></div><div><b id="st">idle</b><span>status</span></div><div><b id="tot">0.0</b><span>mg whole session</span></div></div>
+        </div>
+        <div class="bud"><i id="bar"></i></div>
+        <p class="sub" id="bl">0% of budget</p>
+      </section>
+
+      <section class="panel"><div class="vis"><canvas id="cv" width="420" height="420" aria-label="Decision boundary"></canvas><canvas id="cc" width="560" height="420" aria-label="Accuracy and carbon curves"></canvas></div>
+        <p class="sub">Left: what the model has learned. Right: test accuracy (green) vs. carbon as a share of budget (orange); the dashed line is 100%. Flat green with rising orange means energy is being wasted.</p></section>
+
+      <section class="panel"><h2>Alerts</h2><ul class="al" id="al"><li class="info">No alerts yet. Press Train.</li></ul></section>
+
+      <section class="panel"><h2>Runs</h2><div class="tw"><table><thead><tr><th>Run</th><th>Epochs</th><th>Time s</th><th>mgCO₂e</th><th>Test acc</th><th>mg per acc. point</th><th>Ended</th></tr></thead><tbody id="rb"><tr><td colspan="7" style="text-align:center;color:var(--mute)">No runs yet</td></tr></tbody></table></div></section>
+
+      <section class="panel"><h2>Audit findings</h2><ul class="f" id="fn"><li>Run a training to see findings.</li></ul>
+        <div class="btns"><button id="ai" type="button" disabled>Analyze with Claude</button></div><div id="aio"></div></section>
+    </main>
+  </div>
+</div>
+<script>
+var $=function(i){return document.getElementById(i)},v=function(i){if(i==="dev")return devW();return parseFloat($(i).value)||0};
+var REG=[["India",700],["United States",370],["Germany",380],["United Kingdom",200],["France",55],["Montreal (hydro)",25]];
+REG.forEach(function(r,i){var o=document.createElement("option");o.value=r[1];o.textContent=r[0]+" ("+r[1]+")";$("reg").appendChild(o)});
+$("reg").onchange=function(){$("ci").value=this.value};
+$("theme").onclick=function(){var d=document.documentElement,c=d.getAttribute("data-theme"),dk=c?c==="dark":matchMedia("(prefers-color-scheme: dark)").matches;d.setAttribute("data-theme",dk?"light":"dark")};
+var css=function(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()};
+var seed=7;function rnd(){seed=(seed*16807)%2147483647;return(seed-1)/2147483646}
+function randn(){return Math.sqrt(-2*Math.log(rnd()+1e-12))*Math.cos(6.2832*rnd())}
+
+function gen(kind,n){var X=[],Y=[],K=2,i,c,t,r;
+ for(i=0;i<n;i++){
+  if(kind==="spiral"){K=3;c=i%3;r=Math.floor(i/3)/(n/3);t=c*4+r*4+randn()*.2;X.push([r*Math.sin(t),r*Math.cos(t)]);Y.push(c)}
+  else if(kind==="moons"){c=i%2;t=rnd()*Math.PI;X.push([((c?1-Math.cos(t):Math.cos(t))-.5)*1.1+randn()*.1,((c?.5-Math.sin(t):Math.sin(t))-.25)*1.1+randn()*.1]);Y.push(c)}
+  else if(kind==="circles"){c=i%2;r=(c?.35:.8)+randn()*.06;t=rnd()*6.2832;X.push([r*Math.cos(t),r*Math.sin(t)]);Y.push(c)}
+  else{var x=rnd()*2-1,y=rnd()*2-1;X.push([x,y]);Y.push((x>0)!==(y>0)?1:0)}
+ }
+ var idx=X.map(function(_,j){return j}).sort(function(){return rnd()-.5}),cut=Math.floor(n*.8);
+ return{X:X,Y:Y,K:K,tr:idx.slice(0,cut),te:idx.slice(cut)};
+}
+function Net(sz,act){this.s=sz;this.act=act;this.W=[];this.b=[];this.vW=[];this.vb=[];
+ for(var l=0;l<sz.length-1;l++){var a=sz[l],m=sz[l+1],sc=Math.sqrt(2/a),w=new Float64Array(a*m);for(var i=0;i<w.length;i++)w[i]=randn()*sc;
+  this.W.push(w);this.b.push(new Float64Array(m));this.vW.push(new Float64Array(a*m));this.vb.push(new Float64Array(m))}}
+Net.prototype.fwd=function(x){var A=[x],a=x,L=this.W.length,l,i,j,n,m,z,s,mx,sum;
+ for(l=0;l<L;l++){n=this.s[l];m=this.s[l+1];z=new Float64Array(m);
+  for(j=0;j<m;j++){s=this.b[l][j];for(i=0;i<n;i++)s+=a[i]*this.W[l][i*m+j];z[j]=s}
+  if(l<L-1){for(j=0;j<m;j++)z[j]=this.act==="tanh"?Math.tanh(z[j]):(z[j]>0?z[j]:0)}
+  else{mx=Math.max.apply(null,z);sum=0;for(j=0;j<m;j++){z[j]=Math.exp(z[j]-mx);sum+=z[j]}for(j=0;j<m;j++)z[j]/=sum}
+  A.push(z);a=z}
+ return A};
+function epoch(net,D,cfg){var idx=D.tr.slice().sort(function(){return rnd()-.5}),L=net.W.length,l,i,j,k,b,s,A,d,nd,m,n,
+ gW=net.W.map(function(w){return new Float64Array(w.length)}),gb=net.b.map(function(w){return new Float64Array(w.length)});
+ for(b=0;b<idx.length;b+=cfg.bs){var batch=idx.slice(b,b+cfg.bs);gW.forEach(function(g){g.fill(0)});gb.forEach(function(g){g.fill(0)});
+  for(s=0;s<batch.length;s++){A=net.fwd(D.X[batch[s]]);d=Float64Array.from(A[L]);d[D.Y[batch[s]]]-=1;
+   for(l=L-1;l>=0;l--){n=net.s[l];m=net.s[l+1];nd=l>0?new Float64Array(n):null;
+    for(j=0;j<m;j++){gb[l][j]+=d[j];for(i=0;i<n;i++){gW[l][i*m+j]+=A[l][i]*d[j];if(nd)nd[i]+=net.W[l][i*m+j]*d[j]}}
+    if(nd){for(i=0;i<n;i++)nd[i]*=net.act==="tanh"?1-A[l][i]*A[l][i]:(A[l][i]>0?1:0);d=nd}}}
+  var sc=cfg.lr/batch.length;
+  for(l=0;l<L;l++){for(k=0;k<net.W[l].length;k++){net.vW[l][k]=.9*net.vW[l][k]-sc*gW[l][k];net.W[l][k]+=net.vW[l][k]}
+   for(k=0;k<net.b[l].length;k++){net.vb[l][k]=.9*net.vb[l][k]-sc*gb[l][k];net.b[l][k]+=net.vb[l][k]}}}}
+function acc(net,D,set){var ok=0;set.forEach(function(i){var p=net.fwd(D.X[i]).pop();if(p.indexOf(Math.max.apply(null,p))===D.Y[i])ok++});return ok/set.length}
+
+function palette(){return[css("--c1"),css("--c2"),css("--c3")]}
+function drawB(net,D){var c=$("cv"),x=c.getContext("2d"),W=c.width,N=44,cs=W/N,P=palette(),i,j;
+ x.fillStyle=css("--bg");x.fillRect(0,0,W,W);
+ for(i=0;i<N;i++)for(j=0;j<N;j++){var p=net.fwd([-1.3+2.6*(i+.5)/N,1.3-2.6*(j+.5)/N]).pop();x.globalAlpha=.3;x.fillStyle=P[p.indexOf(Math.max.apply(null,p))];x.fillRect(i*cs,j*cs,cs+1,cs+1)}
+ x.globalAlpha=1;D.X.forEach(function(q,k){x.fillStyle=P[D.Y[k]];x.beginPath();x.arc((q[0]+1.3)/2.6*W,(1.3-q[1])/2.6*W,3,0,6.283);x.fill()})}
+function drawC(h,bud){var c=$("cc"),x=c.getContext("2d"),W=c.width,H=c.height,p=34,mx=Math.max(1.1,Math.max.apply(null,h.mg.map(function(m){return m/bud}).concat([0]))),n=Math.max(h.te.length,2);
+ x.clearRect(0,0,W,H);x.fillStyle=css("--bg");x.fillRect(0,0,W,H);x.font="12px sans-serif";x.fillStyle=css("--mute");
+ var X=function(i){return p+(W-2*p)*i/(n-1)},Y=function(val){return H-p-(H-2*p)*val/mx};
+ x.setLineDash([6,5]);x.strokeStyle=css("--bad");x.beginPath();x.moveTo(p,Y(1));x.lineTo(W-p,Y(1));x.stroke();x.setLineDash([]);x.fillText("100%",4,Y(1)+4);x.fillText("0",14,Y(0));x.fillText("epochs →",W-p-50,H-8);
+ [[h.te,css("--ok"),1],[h.mg,css("--c1"),1/bud]].forEach(function(s){x.strokeStyle=s[1];x.lineWidth=2.4;x.beginPath();s[0].forEach(function(val,i){var yy=Y(val*s[2]);i?x.lineTo(X(i),yy):x.moveTo(X(i),yy)});x.stroke()});x.lineWidth=1}
+
+var runs=[],session=0,stopReq=false,busy=false,firedKeys={},aiOK=null;
+function mgOf(ms){var kwh=v("dev")*v("pue")*ms/3.6e9;return{kwh:kwh,mg:kwh*v("ci")*1000}}
+function alertMsg(level,key,msg){if(key&&firedKeys[key])return;if(key)firedKeys[key]=1;var ul=$("al");if(ul.firstChild&&ul.firstChild.className==="info"&&/No alerts/.test(ul.firstChild.textContent))ul.innerHTML="";
+ var li=document.createElement("li");li.className=level;li.textContent=new Date().toLocaleTimeString()+"  "+msg;ul.insertBefore(li,ul.firstChild);
+ if(level==="bad"){document.title="ALERT: carbon budget";if($("snd").checked)beep()}}
+function beep(){try{var a=new(window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);g.gain.value=.05;o.frequency.value=880;o.start();o.stop(a.currentTime+.25)}catch(e){}}
+function meter(mg,wh,status,base){var bud=v("budget"),pct=mg/bud*100;$("mg").firstChild.nodeValue=mg.toFixed(1);$("kwh").textContent=wh.toFixed(3);$("st").textContent=status;
+ $("tot").textContent=(session+(base===undefined?0:0)+0).toFixed(1);var col=pct>=100?"--bad":pct>=v("warn")?"--warn":"--ok";
+ $("bar").style.width=Math.min(pct,100)+"%";$("bar").style.background=css(col);$("mg").style.color=css(col);$("bl").textContent=pct.toFixed(0)+"% of "+bud+" mg budget"}
+function setBusy(b){busy=b;$("train").disabled=b;$("sweep").disabled=b;$("stop").disabled=!b;$("ai").disabled=b||!runs.length||!aiOK}
+
+async function runTrain(cfg,o){
+ var D=gen(cfg.ds,600),sz=[2],i;for(i=0;i<cfg.lay;i++)sz.push(cfg.hid);sz.push(D.K);var net=new Net(sz,cfg.act),
+ busyMs=0,best=-1,bestEp=0,h={te:[],mg:[]},ended="finished",ep,budget=v("budget"),mgNow=0,whNow=0;
+ for(ep=1;ep<=cfg.ep;ep++){var t=performance.now();epoch(net,D,cfg);var te=acc(net,D,D.te);
+  if(o.draw&&(ep%4===0||ep===1||ep===cfg.ep)){drawB(net,D)}
+  busyMs+=performance.now()-t;var e=mgOf(busyMs);mgNow=e.mg;whNow=e.kwh*1000;var job=o.base+mgNow;
+  h.te.push(te);h.mg.push(job);if(te>best+.002){best=te;bestEp=ep}
+  meter(job,(o.baseWh||0)+whNow,o.label,0);if(o.draw)drawC(h,budget);
+  if(!o.sweep){var proj=mgNow/(ep/cfg.ep);if(ep>=5&&proj>budget&&mgNow<budget)alertMsg("warn","proj","Projected "+proj.toFixed(0)+" mg for "+cfg.ep+" epochs exceeds the "+budget+" mg budget. Reduce epochs, model size, or move region.")}
+  if(job>=budget*v("warn")/100&&job<budget)alertMsg("warn","w"+o.id,"Reached "+v("warn")+"% of budget ("+job.toFixed(1)+" mg) at epoch "+ep+" of "+cfg.ep+".");
+  if(job>=budget){alertMsg("bad","b"+o.id,"BUDGET EXCEEDED: "+job.toFixed(1)+" mg > "+budget+" mg at epoch "+ep+".");if($("auto").checked){ended="budget stop";break}}
+  if(ep-bestEp>=v("pat")){if(!o.sweep)alertMsg("warn","p"+o.id,"Plateau: test accuracy hasn't improved for "+v("pat")+" epochs (best "+(best*100).toFixed(1)+"% at epoch "+bestEp+"). Further training only burns energy.");if($("auto").checked){ended="plateau stop";break}}
+  if(stopReq){ended="stopped";break}
+  await new Promise(function(r){setTimeout(r,0)})}
+ var tr=acc(net,D,D.tr),res={name:o.label,cfg:cfg,ep:Math.min(ep,cfg.ep),bestEp:bestEp,s:busyMs/1000,mg:mgNow,wh:whNow,te:acc(net,D,D.te),tr:tr,ended:ended};
+ if(o.draw)drawB(net,D);return res}
+
+function cfgNow(){return{ds:$("ds").value,hid:v("hid"),lay:v("lay"),act:$("act").value,ep:v("ep"),lr:v("lr"),bs:Math.max(1,v("bs"))}}
+function begin(){stopReq=false;firedKeys={};document.title="Carbon-Aware ML Trainer";setBusy(true)}
+$("train").onclick=async function(){begin();if(fcLevel!=="ok")alertMsg(fcLevel==="critical"?"bad":"warn",null,"Pre-run forecast ("+fcLevel+"): "+fcMsg);var c=cfgNow(),r=await runTrain(c,{draw:true,base:0,label:"Run "+(runs.length+1),id:"r"+runs.length});runs.push(r);session+=r.mg;
+ meter(r.mg,r.wh,r.ended,0);fin()};
+$("sweep").onclick=async function(){begin();var W=[8,16,32,64],L=[.03,.1],trials=[],tot=0,totWh=0,n=0,N=8,c0=cfgNow();
+ W.forEach(function(w){L.forEach(function(l){trials.push({w:w,l:l})})});
+ for(var k=0;k<trials.length;k++){var c=Object.assign({},c0,{hid:trials[k].w,lr:trials[k].l,ep:Math.min(c0.ep,60)});
+  var r=await runTrain(c,{draw:false,sweep:true,base:tot,baseWh:totWh,label:"Sweep "+(k+1)+" (w"+c.hid+", lr"+c.lr+")",id:"s"+k});runs.push(r);tot+=r.mg;totWh+=r.wh;session+=r.mg;n++;
+  var projT=tot/n*N;if(n>=2&&projT>v("budget")&&tot<v("budget"))alertMsg("warn","sp","Sweep projected at "+projT.toFixed(0)+" mg for "+N+" trials, over the "+v("budget")+" mg budget.");
+  if(tot>=v("budget")&&$("auto").checked){alertMsg("info","sx","Sweep halted after "+n+" of "+N+" trials to protect the budget.");break}if(stopReq)break}
+ meter(tot,totWh,"sweep done",0);fin()};
+$("stop").onclick=function(){stopReq=true};
+$("reset").onclick=function(){if(busy)return;runs=[];session=0;firedKeys={};$("al").innerHTML='<li class="info">No alerts yet. Press Train.</li>';meter(0,0,"idle");$("tot").textContent="0.0";render();$("aio").innerHTML="";
+ $("cv").getContext("2d").clearRect(0,0,420,420);$("cc").getContext("2d").clearRect(0,0,560,420);setBusy(false)};
+function fin(){setBusy(false);learn();forecast();render()}
+
+function render(){var rb=$("rb");$("tot").textContent=session.toFixed(1);
+ if(!runs.length){rb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--mute)">No runs yet</td></tr>';$("fn").innerHTML="<li>Run a training to see findings.</li>";return}
+ var bestE=runs.slice().sort(function(a,b){return(a.mg/Math.max(a.te*100,1))-(b.mg/Math.max(b.te*100,1))})[0];
+ rb.innerHTML=runs.map(function(r){return"<tr"+(r===bestE&&runs.length>1?' class="best"':"")+"><td>"+r.name+"</td><td>"+r.ep+"</td><td>"+r.s.toFixed(2)+"</td><td>"+r.mg.toFixed(2)+"</td><td>"+(r.te*100).toFixed(1)+"%</td><td>"+(r.mg/Math.max(r.te*100,1)).toFixed(3)+"</td><td>"+r.ended+"</td></tr>"}).join("");
+ $("fn").innerHTML=findings().map(function(x){return"<li>"+x+"</li>"}).join("")}
+function findings(){var R=runs,tot=R.reduce(function(a,r){return a+r.mg},0),best=R.slice().sort(function(a,b){return b.te-a.te})[0],o=[],ci=v("ci");
+ o.push("<b>Total:</b> "+tot.toFixed(1)+" mgCO₂e over "+R.length+" run(s). Best test accuracy "+(best.te*100).toFixed(1)+"% ("+best.name+").");
+ var near=R.filter(function(r){return r.te>=best.te-.01}).sort(function(a,b){return a.mg-b.mg})[0];
+ if(R.length>2&&near.mg*2<tot)o.push("<b>HPO is the hotspot:</b> "+near.name+" got within 1 point of the best result for "+near.mg.toFixed(1)+" mg, but the search spent "+(tot/near.mg).toFixed(1)+"× that. Use Bayesian search with early pruning instead of a full grid.");
+ var wasted=R.reduce(function(a,r){return a+r.mg*Math.max(0,(r.ep-r.bestEp)/r.ep)},0);
+ if(wasted>tot*.15)o.push("<b>Late-epoch waste:</b> about "+wasted.toFixed(1)+" mg ("+Math.round(wasted/tot*100)+"%) was spent after each run's best epoch. Enable early stopping.");
+ if(v("dev")>=250&&R.every(function(r){return r.cfg.hid<=64}))o.push("<b>Oversized hardware:</b> these models are tiny. A laptop CPU (30 W) would use about "+Math.round(v("dev")/30)+"× less power for the same work.");
+ if(ci>200)o.push("<b>Cleaner grid:</b> the same compute in a 25 g/kWh region would emit "+(tot*25/ci).toFixed(1)+" mg instead of "+tot.toFixed(1)+" ("+Math.round((1-25/ci)*100)+"% lower).");
+ if(best.te<.9)o.push("<b>Low accuracy:</b> "+(best.te*100).toFixed(0)+"% suggests the model is too small or undertrained. More compute won't help if the architecture is wrong; try more layers or a higher learning rate before more epochs.");
+ return o}
+
+(async function(){try{var s=await claude.use("sample");aiOK=s;if(!s)$("ai").title="AI analysis isn't available in this view";$("ai").disabled=true}catch(e){aiOK=null}})();
+$("ai").onclick=async function(){var s=aiOK;if(!s)return;var out=$("aio");out.innerHTML='<p class="sub">Claude is reviewing your runs…</p>';$("ai").disabled=true;
+ var sum={grid_gCO2_per_kWh:v("ci"),pue:v("pue"),assumed_watts:v("dev"),budget_mg:v("budget"),runs:runs.map(function(r){return{name:r.name,hidden:r.cfg.hid,layers:r.cfg.lay,lr:r.cfg.lr,epochs:r.ep,best_epoch:r.bestEp,seconds:+r.s.toFixed(2),mgCO2e:+r.mg.toFixed(2),test_acc:+r.te.toFixed(3),ended:r.ended}}),alerts:Array.prototype.slice.call($("al").children).map(function(l){return l.textContent}).slice(0,8)};
+ try{var res=await s.json("You are an ML sustainability auditor. Analyze this browser-based training session. Energy is estimated as compute time x assumed watts x PUE x grid intensity. Return ONLY JSON: {\"headline\":string,\"risk\":\"low\"|\"medium\"|\"high\",\"findings\":[up to 4 short strings citing numbers],\"actions\":[up to 4 concrete changes, most impactful first],\"estimated_savings_percent\":number}. Do not invent data.\n\nSESSION:\n"+JSON.stringify(sum),{cache:false});
+  out.innerHTML="<h2 style='margin-top:18px'>Claude's review <span class='tag'>"+String(res.risk||"").toUpperCase()+" RISK</span></h2><p><b></b></p><ul class='f' id='a1'></ul><h2>Do this next</h2><ul class='f' id='a2'></ul><p class='sub'></p>";
+  out.querySelector("b").textContent=res.headline||"";(res.findings||[]).forEach(function(x){var li=document.createElement("li");li.textContent=x;$("a1").appendChild(li)});
+  (res.actions||[]).forEach(function(x){var li=document.createElement("li");li.textContent=x;$("a2").appendChild(li)});out.querySelector(".sub").textContent="Estimated savings if applied: ~"+Math.round(res.estimated_savings_percent||0)+"%";
+ }catch(e){out.innerHTML='<p class="sub">'+(e&&e.code==="rate_limited"?"Rate limited. Try again in a moment.":"AI analysis unavailable ("+((e&&e.code)||"error")+"). The audit findings above still apply.")+"</p>"}
+ $("ai").disabled=false};
+var fit=null,fcLevel="ok",fcMsg="";
+function units(c){var s=[2],i,u=0;for(i=0;i<c.lay;i++)s.push(c.hid);s.push(c.ds==="spiral"?3:2);for(i=0;i<s.length-1;i++)u+=s[i]*s[i+1];return u}
+function bench(h){var c={ds:"spiral",hid:h,lay:2,act:"tanh",ep:1,lr:.1,bs:16},D=gen("spiral",600),n=new Net([2,h,h,3],"tanh"),t=0,i;for(i=0;i<8;i++){var s=performance.now();epoch(n,D,c);acc(n,D,D.te);if(i>=4)t+=performance.now()-s}return{u:units(c),ms:t/4}}
+function calibrate(){var p=bench(8),q=bench(32),b=(q.ms-p.ms)/(q.u-p.u);fit={a:Math.max(p.ms-b*p.u,.05),b:Math.max(b,1e-5),scale:1,learned:false}}
+function pe(c,o){return(fit.a+fit.b*units(c))*fit.scale*o}
+function learn(){if(!fit)return;var r=runs.filter(function(x){return x.name.indexOf("Run")===0&&x.ep>0}).map(function(x){return x.s*1000/x.ep/(fit.a+fit.b*units(x.cfg))}).filter(isFinite).sort(function(a,b){return a-b});if(r.length){fit.scale=r[Math.floor(r.length/2)];fit.learned=true}}
+function forecast(){if(!fit)return;var c=cfgNow(),o=fit.learned?1:1.12,e=mgOf(pe(c,o)*c.ep),bud=v("budget"),wr=v("warn")/100,lo=e.mg*.8,hi=e.mg*1.35,lvl=lo>bud?"critical":(e.mg>bud*wr||hi>bud)?"warning":"ok",tot=0;
+ [8,16,32,64].forEach(function(w){var cs=Object.assign({},c,{hid:w,ep:Math.min(c.ep,60)});tot+=2*pe(cs,1)*cs.ep});var sw=mgOf(tot).mg;
+ $("f1").textContent=e.mg.toFixed(1)+" ("+lo.toFixed(1)+"–"+hi.toFixed(1)+")";$("f2").textContent=(pe(c,o)*c.ep/1000).toFixed(1)+" s";$("f3").textContent=sw.toFixed(1)+" mg";
+ $("fb").textContent=lvl.toUpperCase();$("fb").style.background=css({ok:"--ok",warning:"--warn",critical:"--bad"}[lvl]);
+ var per=e.mg/c.ep,msg=lvl==="ok"?"Forecast is within your "+bud+" mg budget.":"Forecast "+e.mg.toFixed(0)+" mg vs a "+bud+" mg budget."+(e.mg>bud?" The budget would run out near epoch "+Math.max(1,Math.floor(bud/per))+" of "+c.ep+"."+($("auto").checked?" Auto-stop would end the run there.":""):"")+" Consider fewer epochs, a smaller model or device, or a cleaner region.";
+ if(sw>bud)msg+=" The 8-trial grid search would use about "+sw.toFixed(0)+" mg.";
+ $("ft").textContent=msg+(fit.learned?" (calibrated from your previous runs)":" (calibrated by a quick benchmark on this device)");fcLevel=lvl;fcMsg=msg;$("train").textContent=lvl==="critical"?"Train anyway":"Train"}
+document.querySelectorAll("aside input,aside select").forEach(function(e){e.addEventListener("input",forecast);e.addEventListener("change",forecast)});
+function devW(){var s=$("dev").value;if(s!=="custom")return parseFloat(s)||0;return(v("cpuw")*v("cpul")/100+v("gpuw")*v("gpul")/100+v("ram")*.375+v("oth"))/(Math.max(v("chg"),50)/100)}
+var MYF=["cpuw","gpuw","cpul","gpul","ram","oth","chg"];
+function showW(){$("mw").textContent=devW().toFixed(0)+" W"}
+function detect(){var t=[],c=navigator.hardwareConcurrency,pl=navigator.platform||"",r="";if(c)t.push(c+" logical cores");
+ try{var g=document.createElement("canvas").getContext("webgl"),e=g&&g.getExtension("WEBGL_debug_renderer_info");if(e){r=String(g.getParameter(e.UNMASKED_RENDERER_WEBGL));t.push("graphics: "+r)}}catch(x){}
+ if(/Mac/.test(pl))t.push("macOS");else if(/Win/.test(pl))t.push("Windows");else if(/Linux/.test(pl))t.push("Linux");
+ if(/Apple/.test(r))$("cpuw").value="20";
+ $("det").textContent="Detected: "+(t.join(", ")||"nothing readable")+". Choose the closest CPU/GPU class below."}
+function restore(){try{var o=JSON.parse(localStorage.getItem("mydev")||"null");if(o){MYF.forEach(function(k){if(o[k]!==undefined)$(k).value=o[k]});$("dev").value="custom"}}catch(e){}}
+$("msave").onclick=function(){try{var o={};MYF.forEach(function(k){o[k]=$(k).value});localStorage.setItem("mydev",JSON.stringify(o));$("msave").textContent="Saved"}catch(e){$("msave").textContent="Can't save here"}setTimeout(function(){$("msave").textContent="Save my device"},1500)};
+$("dev").addEventListener("change",function(){$("mydev").hidden=this.value!=="custom";showW()});
+MYF.forEach(function(k){$(k).addEventListener("input",showW);$(k).addEventListener("change",showW)});
+detect();restore();$("mydev").hidden=$("dev").value!=="custom";showW();
+try{calibrate();forecast()}catch(e){$("ft").textContent="Forecast unavailable."}
+meter(0,0,"idle");
+</script>
+</body>
+</html>

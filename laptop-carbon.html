@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Laptop Carbon Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2efe8;--panel:#fbfaf6;--ink:#1d2320;--mute:#5f6a64;--line:#d8d4c8;--a:#1f6f5c;--hot:#d1572a;--soft:#e6efe9;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121816;--panel:#1b2420;--ink:#e8efeb;--mute:#97a79f;--line:#2e3c36;--a:#52c9a6;--hot:#ff8a5c;--soft:#22302a}}
+:root[data-theme="dark"]{--bg:#121816;--panel:#1b2420;--ink:#e8efeb;--mute:#97a79f;--line:#2e3c36;--a:#52c9a6;--hot:#ff8a5c;--soft:#22302a}
+*,*:before,*:after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding:24px 20px 56px}
+.top{display:flex;justify-content:space-between;align-items:center;color:var(--mute)}
+button{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+h1{font-size:clamp(2.1rem,6vw,3.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:800;margin:14px 0 10px;max-width:14ch}
+h2{font-size:1.2rem;margin:0 0 12px;font-weight:600}
+.lede{color:var(--mute);max-width:56ch;font-size:1.08rem;margin:0 0 26px}
+.grid{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:800px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+.stack>*+*{margin-top:18px}
+label{display:block;font-size:.85rem;color:var(--mute);margin:14px 0 4px}
+label:first-of-type{margin-top:0}
+input,select{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.big{font-size:clamp(3rem,10vw,5rem);font-weight:800;letter-spacing:-.04em;line-height:1;color:var(--hot)}
+.unit{font-size:1rem;color:var(--mute);font-weight:400;letter-spacing:0;margin-left:6px}
+.sub{color:var(--mute);font-size:.92rem;margin:8px 0 0}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:18px}
+.kv div{border-left:3px solid var(--a);padding-left:10px}
+.kv b{display:block;font-size:1.25rem}
+.kv span{font-size:.8rem;color:var(--mute)}
+.split{display:flex;height:16px;border-radius:8px;overflow:hidden;margin:16px 0 6px;background:var(--bg)}
+.split i{display:block;transition:width .3s}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem;color:var(--mute)}
+.legend b{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.bar{display:grid;grid-template-columns:110px 1fr 70px;gap:10px;align-items:center;margin:8px 0;font-size:.9rem}
+.bar .t{height:12px;background:var(--bg);border-radius:6px;overflow:hidden}
+.bar .t i{display:block;height:100%;background:var(--a);border-radius:6px;transition:width .3s}
+.bar.cur .t i{background:var(--hot)}
+.bar.cur .l{font-weight:600}
+.bar .n{text-align:right;color:var(--mute);font-variant-numeric:tabular-nums}
+.eq{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px;overflow-x:auto;white-space:nowrap;margin-top:8px}
+ul{margin:0;padding-left:20px}li{margin:7px 0;max-width:68ch}
+.foot{color:var(--mute);font-size:.82rem;margin-top:24px;max-width:70ch}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><span>Laptop Carbon Calculator</span><button id="theme" type="button">Toggle theme</button></div>
+  <h1>How much CO₂ does your laptop emit?</h1>
+  <p class="lede">Pick your laptop, how you use it, and where you live. You get yearly emissions from electricity and from manufacturing.</p>
+
+  <div class="grid">
+    <form class="panel" onsubmit="return false" aria-label="Laptop inputs">
+      <h2>Your laptop</h2>
+      <label for="model">Type</label>
+      <select id="model">
+        <option value="20" data-e="200">Thin &amp; light (MacBook Air, Ultrabook)</option>
+        <option value="35" data-e="300" selected>Typical laptop (14–15")</option>
+        <option value="45" data-e="350">MacBook Pro / workstation</option>
+        <option value="100" data-e="450">Gaming laptop</option>
+      </select>
+      <label for="load">How you use it</label>
+      <select id="load">
+        <option value="0.6">Light: browsing, documents, video calls</option>
+        <option value="1" selected>Normal: mixed work</option>
+        <option value="1.8">Heavy: coding builds, editing, ML</option>
+      </select>
+      <div class="row">
+        <div><label for="hrs">Hours per day</label><input id="hrs" type="number" min="0" max="24" step="0.5" value="8"></div>
+        <div><label for="days">Days per week</label><input id="days" type="number" min="0" max="7" value="5"></div>
+      </div>
+      <div class="row">
+        <div><label for="watts">Typical watts</label><input id="watts" type="number" min="1" value="35"></div>
+        <div><label for="eff">Charger efficiency %</label><input id="eff" type="number" min="50" max="100" value="85"></div>
+      </div>
+      <h2 style="margin-top:24px">Where &amp; how long</h2>
+      <label for="region">Country grid</label>
+      <select id="region"></select>
+      <div class="row">
+        <div><label for="ci">gCO₂e per kWh</label><input id="ci" type="number" min="0" value="700"></div>
+        <div><label for="life">Years you keep it</label><input id="life" type="number" min="1" max="15" value="4"></div>
+      </div>
+      <label for="emb">Manufacturing footprint (kgCO₂e)</label>
+      <input id="emb" type="number" min="0" value="300">
+    </form>
+
+    <div class="stack">
+      <section class="panel" aria-live="polite">
+        <div class="big"><span id="tot">0</span><span class="unit">kgCO₂e per year</span></div>
+        <p class="sub" id="eqs"></p>
+        <div class="split"><i id="s1" style="background:var(--hot)"></i><i id="s2" style="background:var(--a)"></i></div>
+        <div class="legend"><span><b style="background:var(--hot)"></b>Electricity <span id="l1"></span></span><span><b style="background:var(--a)"></b>Manufacturing, spread over its life <span id="l2"></span></span></div>
+        <div class="kv">
+          <div><b id="kwh">0</b><span>kWh of electricity per year</span></div>
+          <div><b id="elec">0</b><span>kgCO₂e from electricity</span></div>
+          <div><b id="life2">0</b><span>kgCO₂e over its whole life</span></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Same use, different country</h2>
+        <div id="regions"></div>
+        <p class="sub">Electricity part only. Grid values are rough annual averages; check Electricity Maps or Ember for current figures.</p>
+      </section>
+
+      <section class="panel">
+        <h2>How to cut it</h2>
+        <ul id="tips"></ul>
+      </section>
+
+      <section class="panel">
+        <h2>How it is calculated</h2>
+        <div class="eq">kWh/year = watts × load × hours/day × days/week × 52 / 1000 / charger efficiency</div>
+        <div class="eq">Electricity kgCO₂e = kWh/year × grid (g/kWh) / 1000</div>
+        <div class="eq">Manufacturing per year = manufacturing kgCO₂e / years kept</div>
+        <p class="sub">To use real numbers, plug the laptop into a plug-in watt meter for a typical day, or check battery reports: <code>powercfg /batteryreport</code> on Windows, Activity Monitor's Energy tab on macOS, <code>powertop</code> on Linux.</p>
+      </section>
+    </div>
+  </div>
+  <p class="foot">An estimate for awareness, not an official inventory. Manufacturing footprints vary by model; look up your manufacturer's product environmental report for an exact figure.</p>
+</div>
+<script>
+var R=[["India",700],["United States",370],["China",580],["Germany",380],["United Kingdom",200],["Brazil",100],["Canada",120],["France",55],["Custom",null]];
+var $=function(i){return document.getElementById(i)};
+var rs=$("region");R.forEach(function(r,i){var o=document.createElement("option");o.value=i;o.textContent=r[0];rs.appendChild(o)});
+function v(i){return parseFloat($(i).value)||0}
+function f(x,d){return x.toLocaleString(undefined,{maximumFractionDigits:d||0})}
+$("model").onchange=function(){$("watts").value=this.value;$("emb").value=this.options[this.selectedIndex].getAttribute("data-e");calc()};
+rs.onchange=function(){var r=R[this.value];if(r[1]!==null)$("ci").value=r[1];calc()};
+document.querySelectorAll("input,select").forEach(function(e){if(e.id!=="region"&&e.id!=="model")e.addEventListener("input",calc)});
+$("theme").onclick=function(){var d=document.documentElement,c=d.getAttribute("data-theme");var dark=c?c==="dark":matchMedia("(prefers-color-scheme: dark)").matches;d.setAttribute("data-theme",dark?"light":"dark")};
+function calc(){
+ var kwh=v("watts")*v("load")*v("hrs")*v("days")*52/1000/(Math.max(v("eff"),50)/100),ci=v("ci"),life=Math.max(v("life"),1);
+ var elec=kwh*ci/1000,man=v("emb")/life,tot=elec+man;
+ $("tot").textContent=f(tot);
+ $("eqs").textContent="About "+f(tot/0.17)+" km in a petrol car, or "+f(tot/0.008)+" phone charges, per year. A tree absorbs roughly 21 kg a year.";
+ var a=tot?elec/tot*100:0;$("s1").style.width=a+"%";$("s2").style.width=(100-a)+"%";
+ $("l1").textContent=f(a)+"%";$("l2").textContent=f(100-a)+"%";
+ $("kwh").textContent=f(kwh);$("elec").textContent=f(elec);$("life2").textContent=f(elec*life+v("emb"));
+ var list=R.filter(function(r){return r[1]!==null}).map(function(r){return[r[0],r[1]]});
+ if(!list.some(function(r){return r[1]===ci}))list.push(["Your value",ci]);
+ list.sort(function(x,y){return y[1]-x[1]});var m=Math.max(list[0][1],1);
+ $("regions").innerHTML=list.map(function(r){return'<div class="bar'+(r[1]===ci?' cur':'')+'"><span class="l">'+r[0]+'</span><span class="t"><i style="width:'+(r[1]/m*100)+'%"></i></span><span class="n">'+f(kwh*r[1]/1000)+' kg</span></div>'}).join("");
+ var T=[];
+ if(man>elec)T.push("<b>Manufacturing is your biggest share.</b> Keep the laptop longer: going from "+life+" to "+(life+2)+" years cuts its yearly footprint by about "+f(v("emb")/life-v("emb")/(life+2))+" kg.");
+ else T.push("<b>Electricity is your biggest share.</b> Lower brightness, close unused apps, and use battery saver to cut watts.");
+ T.push("<b>Shut down or sleep</b> when away. Sleep draws only a watt or two.");
+ if(ci>400)T.push("<b>Your grid is carbon-intensive.</b> Charge when the grid is cleaner (midday solar hours where available) or choose a renewable electricity plan.");
+ T.push("<b>Repair or upgrade</b> (battery, RAM, SSD) instead of replacing. Buy refurbished when you do need another one.");
+ if(v("load")>1.5)T.push("<b>Heavy workloads:</b> run long jobs in a cleaner cloud region, or on schedule rather than leaving them idle.");
+ $("tips").innerHTML=T.map(function(x){return"<li>"+x+"</li>"}).join("");
+}
+calc();
+</script>
+</body>
+</html>
